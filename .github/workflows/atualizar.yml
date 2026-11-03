@@ -5,8 +5,6 @@ name: Atualizar IAlfabeto
 on:
   schedule:
     - cron: "17 * * * *"   # de hora em hora
-  push:
-    branches: [main]
   workflow_dispatch:
     inputs:
       destino:

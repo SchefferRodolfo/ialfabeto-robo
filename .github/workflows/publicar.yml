@@ -1,0 +1,38 @@
+name: Publicar rápido
+
+# Publicação rápida: um commit aqui (ex.: "Publicar") monta o site com o código novo e os dados já salvos e publica.
+# Não coleta notícias nem escreve textos (isso é a rodada completa, atualizar.yml), então leva ~3 min e não espera a rodada.
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publicar
+  cancel-in-progress: true
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: SchefferRodolfo/ialfabeto
+          ref: main
+          token: ${{ secrets.IALFABETO_TOKEN }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Montar e publicar
+        env:
+          RAPIDO: "1"
+          DESTINO: main
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          ADMIN_KEY: ${{ secrets.ADMIN_KEY }}
+        run: bash scripts/rodar.sh
