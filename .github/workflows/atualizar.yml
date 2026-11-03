@@ -17,6 +17,7 @@ on:
 
 permissions:
   contents: read
+  actions: write  # pra se reagendar (o cron do GitHub atrasa/pula muito)
   models: read   # GitHub Models grátis (IA reserva)
 
 concurrency:
@@ -50,3 +51,21 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           ADMIN_KEY: ${{ secrets.ADMIN_KEY }}
         run: bash scripts/rodar.sh
+
+  # O agendador do GitHub pula muitas execuções. Cada rodada agenda a próxima pra ~1h depois do início
+  # (o cron acima fica só de reserva, caso a corrente quebre).
+  proxima:
+    needs: atualizar
+    if: always() && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    steps:
+      - name: Esperar e disparar a próxima rodada
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          INICIO: ${{ github.event.repository.updated_at }}
+        run: |
+          INI=$(gh api repos/${{ github.repository }}/actions/runs/${{ github.run_id }} -q .run_started_at)
+          ESPERA=$(( 3600 - ( $(date +%s) - $(date -d "$INI" +%s) ) ))
+          [ $ESPERA -gt 0 ] && sleep $ESPERA
+          gh workflow run atualizar.yml -R ${{ github.repository }} --ref main && echo "próxima rodada disparada"
