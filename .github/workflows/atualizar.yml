@@ -20,12 +20,12 @@ permissions:
   actions: write  # pra se reagendar (o cron do GitHub atrasa/pula muito)
   models: read   # GitHub Models grátis (IA reserva)
 
-concurrency:
-  group: atualizar
-  cancel-in-progress: false
-
 jobs:
   atualizar:
+    # só a rodada de verdade entra na fila (a espera da "proxima" não trava uma publicação nova)
+    concurrency:
+      group: atualizar
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -56,6 +56,10 @@ jobs:
   # (o cron acima fica só de reserva, caso a corrente quebre).
   proxima:
     needs: atualizar
+    # só existe 1 espera viva: uma rodada nova (push, cron ou disparo) cancela a espera antiga e vira a corrente
+    concurrency:
+      group: proxima
+      cancel-in-progress: true
     if: always() && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 70
