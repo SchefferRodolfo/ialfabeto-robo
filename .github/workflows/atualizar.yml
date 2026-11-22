@@ -48,6 +48,7 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           ADMIN_KEY: ${{ secrets.ADMIN_KEY }}
+          IG_TOKEN: ${{ secrets.IG_TOKEN }}
         run: bash scripts/rodar.sh
 
   # O agendador do GitHub pula muitas execuções. Cada rodada agenda a próxima pra ~1h depois do início
